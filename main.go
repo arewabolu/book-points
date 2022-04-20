@@ -12,17 +12,10 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-type book struct {
-	title   string
-	chapter int
-	lesson
-}
+//add a field of type driver
 
-type lesson struct {
-	notes string
-}
-
-func addNewBooks(n int) (fyne.CanvasObject, int) {
+// grid button implementation
+/*func addNewBooks(n int) (fyne.CanvasObject,int) {
 	butt := widget.NewButtonWithIcon("add new book", theme.ContentAddIcon(), func() {
 
 	})
@@ -48,24 +41,7 @@ func bookList(books []*book) fyne.CanvasObject {
 	//bookList := container.NewAdaptiveGrid(size, bookLayout)
 	//theme.DocumentSaveIcon()
 	return bookLayout
-}
-
-func points() fyne.CanvasObject {
-	//newPoint := widget.NewIcon(theme.MailSendIcon())
-	content := widget.NewEntry()
-	bar := widget.NewToolbar(
-		widget.NewToolbarAction(theme.AccountIcon(), func() {
-			content.SetText("")
-		}))
-	return container.New(layout.NewBorderLayout(bar, content, nil, nil), bar, content)
-}
-
-func appTabButton() fyne.CanvasObject {
-	tab := container.NewAppTabs(container.NewTabItemWithIcon("book", theme.CancelIcon(), points()))
-	//tab.CreateRenderer()
-	tab.SetTabLocation(container.TabLocationTop)
-	return tab
-}
+}*/
 
 func header() fyne.CanvasObject {
 	rect := canvas.NewRectangle(color.White)
@@ -85,18 +61,61 @@ func header() fyne.CanvasObject {
 	return header
 }
 
+func points() fyne.CanvasObject {
+	newPoint := widget.NewIcon(theme.MailSendIcon())
+	content := widget.NewEntry()
+	//toolbar for a singular note
+
+	dol := container.NewVBox(container.NewBorder(nil, nil, newPoint, nil, content))
+
+	return dol
+}
+
+func (a *uiComp) loadUI() fyne.CanvasObject {
+
+	//bTitle:= binding.BindString()
+	var lHandle bookComp
+	//	bookList := container.NewVBox()
+	//toolbar for left-side
+	leftBar := widget.NewToolbar(
+		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
+			lHandle.add(&Book{
+				Title: "TestBook1",
+			})
+		}),
+		widget.NewToolbarSpacer(),
+		widget.NewToolbarAction(theme.DeleteIcon(), func() {}),
+	)
+	//leftBar.
+
+	leftList := widget.NewList(
+		func() int { return len(lHandle.Comp) },
+		func() fyne.CanvasObject {
+			return widget.NewLabel("")
+		},
+
+		func(lii widget.ListItemID, co fyne.CanvasObject) {
+
+			co.(*widget.Label).SetText(lHandle.Comp[lii].Title)
+
+		},
+	)
+
+	left := container.NewBorder(leftBar, nil, nil, nil, leftList)
+	right := points()
+
+	split := container.NewHSplit(left, right)
+	split.Offset = 0.25
+	return split
+}
+
+//bullet points for chapter
+
 func main() {
 	app := app.New()
 	wind := app.NewWindow("BookTakes")
-
-	list := []*book{
-		{title: "book1", chapter: 1},
-		{title: "book2", chapter: 2, lesson: lesson{notes: ""}},
-		{title: "book3", chapter: 1},
-		{title: "book4", chapter: 2, lesson: lesson{notes: ""}},
-	}
-
-	content := container.NewBorder(header(), homeAddButton(), nil, nil, bookList(list))
+	var ui *uiComp
+	content := container.NewBorder(header(), nil, nil, nil, ui.loadUI())
 	wind.Resize(fyne.NewSize(600, 600))
 	wind.SetContent(content)
 	wind.ShowAndRun()
