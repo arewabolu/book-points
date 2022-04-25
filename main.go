@@ -79,9 +79,7 @@ func (a *uiComp) loadUI() fyne.CanvasObject {
 	//toolbar for left-side
 	leftBar := widget.NewToolbar(
 		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
-			lHandle.add(&Book{
-				Title: "TestBook1",
-			})
+			lHandle.add()
 		}),
 		widget.NewToolbarSpacer(),
 		widget.NewToolbarAction(theme.DeleteIcon(), func() {}),

@@ -10,12 +10,9 @@ type bookComp struct {
 	Comp []*Book
 }
 
-func (b Book) SetTitle(title string) string {
-	b.Title = title
-	if b.Title == "" {
-		return "Untitled"
-	}
-	return b.Title
+// used to set default title
+func (b *Book) setDefTitle() {
+	b.Title = "Untitled"
 }
 
 //func (b *Book) SetPoints(tittle string) string {
@@ -24,7 +21,10 @@ func (b Book) SetTitle(title string) string {
 //}
 
 //append to the initial list a new Book
-func (n *bookComp) add(b *Book) {
+func (n *bookComp) add() {
+	var b *Book
+	b.setDefTitle()
+
 	n.Comp = append(n.Comp, b)
 }
 
