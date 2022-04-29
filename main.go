@@ -61,32 +61,21 @@ func header() fyne.CanvasObject {
 	return header
 }
 
-func points() fyne.CanvasObject {
-	newPoint := widget.NewIcon(theme.MailSendIcon())
-	content := widget.NewEntry()
-	//toolbar for a singular note
-
-	dol := container.NewVBox(container.NewBorder(nil, nil, newPoint, nil, content))
-
-	return dol
-}
-
 func (a *uiComp) loadUI() fyne.CanvasObject {
-
-	//bTitle:= binding.BindString()
 	var lHandle bookComp
-	//	bookList := container.NewVBox()
+
+	/*LEFTSIDE*/
 	//toolbar for left-side
 	leftBar := widget.NewToolbar(
 		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
 			lHandle.add()
+			a.bookData.Refresh()
 		}),
 		widget.NewToolbarSpacer(),
 		widget.NewToolbarAction(theme.DeleteIcon(), func() {}),
 	)
-	//leftBar.
 
-	leftList := widget.NewList(
+	a.bookData = widget.NewList(
 		func() int { return len(lHandle.Comp) },
 		func() fyne.CanvasObject {
 			return widget.NewLabel("")
@@ -99,12 +88,28 @@ func (a *uiComp) loadUI() fyne.CanvasObject {
 		},
 	)
 
-	left := container.NewBorder(leftBar, nil, nil, nil, leftList)
-	right := points()
+	left := container.NewBorder(leftBar, nil, nil, nil, a.bookData)
 
-	split := container.NewHSplit(left, right)
+	/*RIGHT SIDE*/
+	//Entry to edit title
+
+	//svButt := widget.NewButton("Save", func(
+	//implement a logger to file (maybe a json file)
+	//) {})
+	a.uiTitle = widget.NewEntry()
+	a.uiTitle.OnChanged = func(s string) {
+
+	}
+
+	dol := container.NewVBox(container.NewBorder(nil, nil, nil, nil))
+
+	//fyne.KeyReturn || fyne.Re
+	//right :=
+	/*JOINT SPLIT*/
+	split := container.NewHSplit(left, dol)
 	split.Offset = 0.25
-	return split
+	content := container.NewBorder(header(), nil, nil, nil, split)
+	return content
 }
 
 //bullet points for chapter
@@ -112,10 +117,10 @@ func (a *uiComp) loadUI() fyne.CanvasObject {
 func main() {
 	app := app.New()
 	wind := app.NewWindow("BookTakes")
-	var ui *uiComp
-	content := container.NewBorder(header(), nil, nil, nil, ui.loadUI())
+	ui := &uiComp{}
+
 	wind.Resize(fyne.NewSize(600, 600))
-	wind.SetContent(content)
+	wind.SetContent(ui.loadUI())
 	wind.ShowAndRun()
 }
 
@@ -129,4 +134,7 @@ func main() {
 /*
 -App should store data in a text file?
 -App should add and delete books
+-New feature:saving should be a list;as pdf or just save,
+	-save alone would save on device;
+	-as pdf will save to a folder in device
 */
