@@ -12,37 +12,42 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+var (
+	Title string
+	size  int
+)
+
+//type Num struct {
+//	num int
+//}
+
+//func (n *Num) incr() {
+//	n.num++
+//}
+
+func incr2(p *int) {
+	size++
+	*p = size
+}
+
+func chngetTitle(s *string) {
+	*s = Title
+}
+func setDefault() string {
+	return "Untitled"
+}
+
+func createIcon() *widget.Icon {
+	resc, _ := LoadResourceFromPath("/home/arthemis/Pictures/icons/bullet")
+	theme.NewThemedResource(resc)
+	icon := widget.NewIcon(resc)
+
+	return icon
+}
+
 //add a field of type driver
 
-// grid button implementation
-/*func addNewBooks(n int) (fyne.CanvasObject,int) {
-	butt := widget.NewButtonWithIcon("add new book", theme.ContentAddIcon(), func() {
-
-	})
-	return butt
-}
-func bookList(books []*book) fyne.CanvasObject {
-	//rect := canvas.NewRectangle(color.NRGBA{R: 0, G: 0, B: 0, A: 255})
-	//rect.Resize(fyne.NewSize(100, 100))
-
-	size := len(books)
-
-	//Layout of Books Notes created in the homepage
-	fGrid := container.NewGridWrap(fyne.NewSize(100, 100))
-
-	bookLayout := container.NewGridWithColumns(size, fGrid)
-
-	//loop through all items in books
-	//add to the book layout a button
-	for _, n := range books {
-		fGrid.Add(widget.NewButton(n.title, func() {}))
-	}
-
-	//bookList := container.NewAdaptiveGrid(size, bookLayout)
-	//theme.DocumentSaveIcon()
-	return bookLayout
-}*/
-
+//text-header for application
 func header() fyne.CanvasObject {
 	rect := canvas.NewRectangle(color.White)
 	rect.StrokeColor = color.Black
@@ -51,7 +56,6 @@ func header() fyne.CanvasObject {
 
 	rect.Move(fyne.NewPos(5, 5))
 	rect.Resize(fyne.NewSize(width, 90))
-	//text-header for application is centerd in a rectangle
 
 	topic := canvas.NewText("Books", color.Black)
 	topic.Alignment = fyne.TextAlignCenter
@@ -60,56 +64,61 @@ func header() fyne.CanvasObject {
 
 	return header
 }
+func loadUI() fyne.CanvasObject {
 
-func (a *uiComp) loadUI() fyne.CanvasObject {
-	var lHandle bookComp
-
-	/*LEFTSIDE*/
-	//toolbar for left-side
-	leftBar := widget.NewToolbar(
+	lst := container.NewVBox()
+	addButn := widget.NewToolbar(
 		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
-			lHandle.add()
-			a.bookData.Refresh()
+			listbtn := widget.NewButton(setDefault(), func() {})
+			listbtn.Alignment = widget.ButtonAlignLeading
+			lst.Objects = append(lst.Objects, listbtn)
+		}),
+	)
+
+	leftHand := container.NewBorder(
+		addButn,
+		nil,
+		nil,
+		nil,
+		lst,
+	)
+	leftHand.Refresh()
+
+	//Create New Entry/Input widget
+	entry := widget.NewEntry()
+	entry.SetPlaceHolder("Enter your name")
+	entry.Resize(fyne.NewSize(250, 30))
+
+	noteBox := container.NewVBox()
+	boxBox := container.NewBorder(nil, nil, nil, nil)
+	noteTlBar := widget.NewToolbar(
+		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
+			icon2 := createIcon()
+			noteEntry := widget.NewEntry()
+			boxBox = container.NewBorder(nil, nil, icon2, nil, noteEntry)
+
+			noteBox.Add(boxBox)
+		}),
+
+		widget.NewToolbarSpacer(),
+		widget.NewToolbarAction(theme.MediaFastRewindIcon(), func() {
+			icon2 := createIcon()
+			lNoteEntry := widget.NewMultiLineEntry()
+			boxBox = container.NewBorder(nil, nil, icon2, nil, lNoteEntry)
+			noteBox.Add(boxBox)
 		}),
 		widget.NewToolbarSpacer(),
-		widget.NewToolbarAction(theme.DeleteIcon(), func() {}),
+		widget.NewToolbarAction(theme.DocumentSaveIcon(), func() {}),
 	)
+	//nwntButt.Alignment = widget.ButtonAlignTrailing
 
-	a.bookData = widget.NewList(
-		func() int { return len(lHandle.Comp) },
-		func() fyne.CanvasObject {
-			return widget.NewLabel("")
-		},
+	topQuater := container.NewVBox(entry, noteTlBar)
+	rightHand := container.NewBorder(topQuater, nil, nil, nil, noteBox)
 
-		func(lii widget.ListItemID, co fyne.CanvasObject) {
+	simp := container.NewHSplit(leftHand, rightHand)
+	simp.Offset = 0.25
 
-			co.(*widget.Label).SetText(lHandle.Comp[lii].Title)
-
-		},
-	)
-
-	left := container.NewBorder(leftBar, nil, nil, nil, a.bookData)
-
-	/*RIGHT SIDE*/
-	//Entry to edit title
-
-	//svButt := widget.NewButton("Save", func(
-	//implement a logger to file (maybe a json file)
-	//) {})
-	a.uiTitle = widget.NewEntry()
-	a.uiTitle.OnChanged = func(s string) {
-
-	}
-
-	dol := container.NewVBox(container.NewBorder(nil, nil, nil, nil))
-
-	//fyne.KeyReturn || fyne.Re
-	//right :=
-	/*JOINT SPLIT*/
-	split := container.NewHSplit(left, dol)
-	split.Offset = 0.25
-	content := container.NewBorder(header(), nil, nil, nil, split)
-	return content
+	return simp
 }
 
 //bullet points for chapter
@@ -117,24 +126,8 @@ func (a *uiComp) loadUI() fyne.CanvasObject {
 func main() {
 	app := app.New()
 	wind := app.NewWindow("BookTakes")
-	ui := &uiComp{}
-
 	wind.Resize(fyne.NewSize(600, 600))
-	wind.SetContent(ui.loadUI())
+	fullWind := container.NewBorder(header(), nil, nil, nil, loadUI())
+	wind.SetContent(fullWind)
 	wind.ShowAndRun()
 }
-
-/*
--User can add name of book read
--User can take one line notes from the book read
-- User can list chapters where notes where taken from
--User can see a list of books
-*/
-
-/*
--App should store data in a text file?
--App should add and delete books
--New feature:saving should be a list;as pdf or just save,
-	-save alone would save on device;
-	-as pdf will save to a folder in device
-*/
