@@ -12,31 +12,6 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-var (
-	Title string
-	size  int
-)
-
-//type Num struct {
-//	num int
-//}
-
-//func (n *Num) incr() {
-//	n.num++
-//}
-
-func incr2(p *int) {
-	size++
-	*p = size
-}
-
-func chngetTitle(s *string) {
-	*s = Title
-}
-func setDefault() string {
-	return "Untitled"
-}
-
 func createIcon() *widget.Icon {
 	resc, _ := LoadResourceFromPath("/home/arthemis/Pictures/icons/bullet")
 	theme.NewThemedResource(resc)
@@ -64,14 +39,65 @@ func header() fyne.CanvasObject {
 
 	return header
 }
+
+//Loads when note buuton is clicked
+func rightSide() fyne.CanvasObject {
+	// Reloaded for each new points
+	noteBox := container.NewVBox()
+
+	//Holds entry widget and bullet icon
+	boxBox := container.NewBorder(nil, nil, nil, nil)
+
+	oneAdd := widget.NewButton("New Line", func() {
+		icon2 := createIcon()
+		noteEntry := widget.NewEntry()
+		boxBox = container.NewBorder(nil, nil, icon2, nil, noteEntry)
+
+		noteBox.Add(boxBox)
+	})
+
+	//doubleAdd := widget.NewButton("Double", func() {
+	//	icon2 := createIcon()
+	//	noteEntry := widget.NewMultiLineEntry()
+	//	boxBox = container.NewBorder(nil, nil, icon2, nil, noteEntry)
+	//	noteBox.Add(boxBox)
+	//})
+	SaveButn := widget.NewButton("Save", func() {})
+	SaveButn.Resize(fyne.NewSize(30, 30))
+	DictionButn := widget.NewButton("Dictionaries", func() {})
+
+	//Create New Entry/Input widget
+	entry := widget.NewEntry()
+	entry.Resize(fyne.NewSize(250, 30))
+
+	//Change title of Book through entry
+	entry.OnChanged = func(s string) {
+
+	}
+	ButnLine := container.NewBorder(nil, nil, oneAdd, SaveButn, DictionButn)
+
+	topQuater := container.NewVBox(entry, ButnLine)
+	rightHand2 := container.NewBorder(topQuater, nil, nil, nil, noteBox)
+	return rightHand2
+}
+
 func loadUI() fyne.CanvasObject {
+	fsttext := container.NewCenter(widget.NewLabel("Please Select a book!"))
+	emptyCont := container.NewBorder(nil, nil, nil, nil, fsttext)
 
 	lst := container.NewVBox()
+
 	addButn := widget.NewToolbar(
 		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
-			listbtn := widget.NewButton(setDefault(), func() {})
-			listbtn.Alignment = widget.ButtonAlignLeading
-			lst.Objects = append(lst.Objects, listbtn)
+			lstButn := widget.NewButton("Untitled", func() {
+				emptyCont.Remove(fsttext)
+				r := rightSide()
+				emptyCont.Add(r)
+
+			})
+
+			lst.Objects = append(lst.Objects, lstButn)
+
 		}),
 	)
 
@@ -84,38 +110,7 @@ func loadUI() fyne.CanvasObject {
 	)
 	leftHand.Refresh()
 
-	//Create New Entry/Input widget
-	entry := widget.NewEntry()
-	entry.SetPlaceHolder("Enter your name")
-	entry.Resize(fyne.NewSize(250, 30))
-
-	noteBox := container.NewVBox()
-	boxBox := container.NewBorder(nil, nil, nil, nil)
-	noteTlBar := widget.NewToolbar(
-		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
-			icon2 := createIcon()
-			noteEntry := widget.NewEntry()
-			boxBox = container.NewBorder(nil, nil, icon2, nil, noteEntry)
-
-			noteBox.Add(boxBox)
-		}),
-
-		widget.NewToolbarSpacer(),
-		widget.NewToolbarAction(theme.MediaFastRewindIcon(), func() {
-			icon2 := createIcon()
-			lNoteEntry := widget.NewMultiLineEntry()
-			boxBox = container.NewBorder(nil, nil, icon2, nil, lNoteEntry)
-			noteBox.Add(boxBox)
-		}),
-		widget.NewToolbarSpacer(),
-		widget.NewToolbarAction(theme.DocumentSaveIcon(), func() {}),
-	)
-	//nwntButt.Alignment = widget.ButtonAlignTrailing
-
-	topQuater := container.NewVBox(entry, noteTlBar)
-	rightHand := container.NewBorder(topQuater, nil, nil, nil, noteBox)
-
-	simp := container.NewHSplit(leftHand, rightHand)
+	simp := container.NewHSplit(leftHand, emptyCont)
 	simp.Offset = 0.25
 
 	return simp
