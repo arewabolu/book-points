@@ -13,7 +13,7 @@ import (
 )
 
 func createIcon() *widget.Icon {
-	resc, _ := LoadResourceFromPath("/home/arthemis/Pictures/icons/bullet")
+	resc, _ := LoadResourceFromPath("github.com/arewabolu/book-points/blob/main/Assets/icons/bullet")
 	theme.NewThemedResource(resc)
 	icon := widget.NewIcon(resc)
 
@@ -41,7 +41,8 @@ func header() fyne.CanvasObject {
 }
 
 //Loads when note buuton is clicked
-func rightSide() fyne.CanvasObject {
+func rightSide() (fyne.CanvasObject, book) {
+
 	// Reloaded for each new points
 	noteBox := container.NewVBox()
 
@@ -66,19 +67,21 @@ func rightSide() fyne.CanvasObject {
 	SaveButn.Resize(fyne.NewSize(30, 30))
 	DictionButn := widget.NewButton("Dictionaries", func() {})
 
-	//Create New Entry/Input widget
+	//Title Input widget
 	entry := widget.NewEntry()
 	entry.Resize(fyne.NewSize(250, 30))
 
 	//Change title of Book through entry
+	b := setBooks()
 	entry.OnChanged = func(s string) {
 
+		b.Title = s
 	}
 	ButnLine := container.NewBorder(nil, nil, oneAdd, SaveButn, DictionButn)
 
 	topQuater := container.NewVBox(entry, ButnLine)
 	rightHand2 := container.NewBorder(topQuater, nil, nil, nil, noteBox)
-	return rightHand2
+	return rightHand2, b
 }
 
 func loadUI() fyne.CanvasObject {
@@ -89,13 +92,19 @@ func loadUI() fyne.CanvasObject {
 
 	addButn := widget.NewToolbar(
 		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
-			lstButn := widget.NewButton("Untitled", func() {
-				emptyCont.Remove(fsttext)
-				r := rightSide()
-				emptyCont.Add(r)
+			r, bT := rightSide()
+			lstButn := widget.NewButton(bT.Title, func() {
+				// to replace previous right sidr widget
+				if len(emptyCont.Objects) > 0 {
+					for _, elem := range emptyCont.Objects {
+						emptyCont.Remove(elem)
+					}
+				}
+
+				emptyCont.Objects = append(emptyCont.Objects, r)
 
 			})
-
+			//for the left side
 			lst.Objects = append(lst.Objects, lstButn)
 
 		}),
