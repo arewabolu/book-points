@@ -49,9 +49,10 @@ func read4rmBook(filepath string) error {
 
 }
 
-func write2Book(name, info string) {
+func write2Titile(name, info string) {
 	//when best to use append vs write only
-	openBook, err := os.OpenFile(name+"\n"+".txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	title := name + "\n" + ".txt"
+	openBook, err := os.OpenFile(title, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -62,10 +63,4 @@ func write2Book(name, info string) {
 		fmt.Println(wrErr)
 	}
 	//ioutil.WriteFile()
-}
-
-//Might nor be Needed use Write2Book.
-func createBook(name string) error {
-	_, err := os.Create("bootakes_" + name + ".txt") //don't forget the path and file type
-	return err
 }

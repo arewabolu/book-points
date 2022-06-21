@@ -88,9 +88,10 @@ func rightSide() fyne.CanvasObject {
 	//	boxBox = container.NewBorder(nil, nil, icon2, nil, noteEntry)
 	//	noteBox.Add(boxBox)
 	//})
-	SaveButn := widget.NewButton("Save", func() {
+	SaveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
 		txt, _ := bindStr.Get()
-		write2Book(txt, txt)
+
+		write2Titile(txt, txt)
 	})
 	SaveButn.Resize(fyne.NewSize(30, 30))
 	DictionButn := widget.NewButton("Dictionaries", func() {})
@@ -108,17 +109,23 @@ func leftSide(cont *fyne.Container) fyne.CanvasObject {
 
 	addButn := widget.NewToolbar(
 		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
+
 			lstButn := &widget.Button{}
+			lstButn.Text = "Untitiled"
 			r := rightSide()
 			lstButn.OnTapped = func() {
+
 				//time.Sleep(10 * time.Millisecond)
-				//lstButn.Importance = widget.HighImportance
+
+				lstButn.Importance = widget.HighImportance
+				lstButn.Refresh()
 
 				for _, elem := range cont.Objects {
 					cont.Remove(elem)
 				}
 				cont.Objects = append(cont.Objects, r)
 			}
+			lstButn.Importance = widget.LowImportance
 
 			//for the left side
 			lst.Objects = append(lst.Objects, lstButn)
