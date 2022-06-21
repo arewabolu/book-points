@@ -1,14 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -41,21 +40,28 @@ func header() fyne.CanvasObject {
 }
 
 // Creates a Title entry
-func tEntry(b *book) (*widget.Entry, *book) {
-	popEntry := widget.NewEntry()
+func tEntry() (*widget.Entry, binding.String) {
+	str := binding.NewString()
 
-	popEntry.OnChanged = func(s string) {
-		SetTitle(s, b)
-		popEntry.Refresh()
-	}
-	return popEntry, b
+	popEntry := widget.NewEntryWithData(str)
+	popEntry.Resize(fyne.NewSize(250, 30))
+	go func() {
+		popEntry.OnChanged = func(s string) {
+			str.Set(s)
+		}
+	}()
+
+	return popEntry, str
 }
 
 //Loads when note buuton is clicked
-func rightSide(p *widget.Entry) fyne.CanvasObject {
+func rightSide() fyne.CanvasObject {
 	icon2 := createIcon()
+	titleEntry, bindStr := tEntry()
+	titleEntry.Resize(fyne.NewSize(250, 30))
 
 	// Reloaded for each new points
+
 	noteBox := container.NewVBox()
 	//Holds note-entry widget and bullet icon
 	boxBox := container.NewBorder(nil, nil, nil, nil)
@@ -68,6 +74,7 @@ func rightSide(p *widget.Entry) fyne.CanvasObject {
 
 		noteBox.Add(boxBox)
 		del.OnTapped = func() {
+
 			for ind := range noteBox.Objects {
 				noteBox.Remove(noteBox.Objects[ind])
 			}
@@ -81,79 +88,71 @@ func rightSide(p *widget.Entry) fyne.CanvasObject {
 	//	boxBox = container.NewBorder(nil, nil, icon2, nil, noteEntry)
 	//	noteBox.Add(boxBox)
 	//})
-	SaveButn := widget.NewButton("Save", func() {})
+	SaveButn := widget.NewButton("Save", func() {
+		txt, _ := bindStr.Get()
+		write2Book(txt, txt)
+	})
 	SaveButn.Resize(fyne.NewSize(30, 30))
 	DictionButn := widget.NewButton("Dictionaries", func() {})
 
 	ButnLine := container.NewBorder(nil, nil, oneAdd, SaveButn, DictionButn)
-	p.Resize(fyne.NewSize(250, 30))
 
-	topQuater := container.NewVBox(p, ButnLine)
+	topQuater := container.NewVBox(titleEntry, ButnLine)
 	rightHand2 := container.NewBorder(topQuater, nil, nil, nil, noteBox)
 
 	return rightHand2
 }
 
-func loadUI(w fyne.Window) fyne.CanvasObject {
-	fsttext := container.NewCenter(widget.NewLabel("Please Select a book!"))
-	emptyCont := container.NewBorder(nil, nil, nil, nil, fsttext)
+func leftSide(cont *fyne.Container) fyne.CanvasObject {
 	lst := container.NewVBox()
+
 	addButn := widget.NewToolbar(
 		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
-			b := &book{}
-			popEnt, bK := tEntry(b)
+			lstButn := &widget.Button{}
+			r := rightSide()
+			lstButn.OnTapped = func() {
+				//time.Sleep(10 * time.Millisecond)
+				//lstButn.Importance = widget.HighImportance
 
-			fmt.Println(bK)
-
-			NewDialog := dialog.NewForm("Create New Book", "Create", "Cancel", []*widget.FormItem{widget.NewFormItem("Name", popEnt)}, func(b bool) {
-				if b == true {
-
+				for _, elem := range cont.Objects {
+					cont.Remove(elem)
 				}
-			}, w)
-			NewDialog.Show()
-			r := rightSide(popEnt)
-			lstButn := widget.NewButton(b.Title, func() {
-
-				// to replace previous right side widget
-				for _, elem := range emptyCont.Objects {
-					emptyCont.Remove(elem)
-				}
-				emptyCont.Objects = append(emptyCont.Objects, r)
-			})
+				cont.Objects = append(cont.Objects, r)
+			}
 
 			//for the left side
 			lst.Objects = append(lst.Objects, lstButn)
-			lstButn.Refresh()
+
 		}),
 	)
-	addButn.Refresh()
 
-	leftHand := container.NewBorder(
-		addButn,
-		nil,
-		nil,
-		nil,
-		lst,
-	)
-	leftHand.Refresh()
+	leftHand := container.NewBorder(addButn, nil, nil, nil, lst)
+	lScroll := container.NewScroll(leftHand)
+	return lScroll
+}
 
-	simp := container.NewHSplit(leftHand, emptyCont)
+func loadUI() fyne.CanvasObject {
+	fsttext := container.NewCenter(widget.NewLabel("Please Select a book!"))
+	emptyCont := container.NewBorder(nil, nil, nil, nil, fsttext)
+
+	l := leftSide(emptyCont)
+
+	simp := container.NewHSplit(l, emptyCont)
 	simp.Offset = 0.25
 
 	return simp
 }
-
-//bullet points for chapter
 
 func main() {
 	app := app.New()
 	wind := app.NewWindow("BookTakes")
 	if wind.FullScreen() != true {
 		wind.SetMaster()
-		wind.SetFullScreen(true)
+		//wind.SetFullScreen(true)
 	}
-	//	wind.Resize(fyne.NewSize(600, 600))
-	fullWind := container.NewBorder(header(), nil, nil, nil, loadUI(wind))
+	wind.Resize(fyne.NewSize(600, 600))
+
+	fullWind := container.NewBorder(header(), nil, nil, nil, loadUI())
 	wind.SetContent(fullWind)
 	wind.ShowAndRun()
 }

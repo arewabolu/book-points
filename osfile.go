@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -48,20 +49,19 @@ func read4rmBook(filepath string) error {
 
 }
 
-func write2Book(name, info string) error {
+func write2Book(name, info string) {
 	//when best to use append vs write only
-	openBook, err := os.OpenFile("/bookpoints/"+name+".", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	openBook, err := os.OpenFile(name+"\n"+".txt", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		return err
+		fmt.Println(err)
 	}
 
-	currSize, _ := checkSize(name)
-	_, wrErr := openBook.WriteAt([]byte(info), currSize+1)
+	//currSize, _ := checkSize(name)
+	_, wrErr := openBook.Write([]byte(info))
 	if wrErr != nil {
-		return wrErr
+		fmt.Println(wrErr)
 	}
 	//ioutil.WriteFile()
-	return nil
 }
 
 //Might nor be Needed use Write2Book.

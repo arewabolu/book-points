@@ -15,7 +15,7 @@ func setBooks() (b book) {
 }
 
 // for book
-func SetTitle(s string, b *book) {
+func (b *book) SetTitle(s string) {
 	s = b.Title
 }
 
