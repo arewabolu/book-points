@@ -19,7 +19,29 @@ func checkSize(name string) (int64, error) {
 	return size, nil
 }
 
+func writer(wr *os.File, s string) {
+	_, err := wr.WriteString(s)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
 //should be run concurrently?
+
+func write2Book(name, info string) {
+	//when best to use append vs write only
+
+	//opens book with title to write title on
+	title := name + ".txt"
+	openBook, err := os.OpenFile(title, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println(err)
+	}
+	writer(openBook, info)
+
+	//ioutil.WriteFile()
+}
+
 func read4rmBook(filepath string) error {
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -47,20 +69,4 @@ func read4rmBook(filepath string) error {
 	}
 	return nil
 
-}
-
-func write2Titile(name, info string) {
-	//when best to use append vs write only
-	title := name + "\n" + ".txt"
-	openBook, err := os.OpenFile(title, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	//currSize, _ := checkSize(name)
-	_, wrErr := openBook.Write([]byte(info))
-	if wrErr != nil {
-		fmt.Println(wrErr)
-	}
-	//ioutil.WriteFile()
 }
