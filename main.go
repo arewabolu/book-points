@@ -2,12 +2,13 @@ package main
 
 import (
 	"image/color"
+	"os"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -40,33 +41,69 @@ func header() fyne.CanvasObject {
 }
 
 // Creates a Title entry
-func tEntry() (*widget.Entry, binding.String) {
-	str := binding.NewString()
 
-	popEntry := widget.NewEntryWithData(str)
-	popEntry.Resize(fyne.NewSize(250, 30))
-	go func() {
-		popEntry.OnChanged = func(s string) {
-			str.Set(s)
-		}
-	}()
-
-	return popEntry, str
-}
-
-//Loads when note buuton is clicked
-func rightSide() fyne.CanvasObject {
+func rightSidewithFile(txt string, fs string) fyne.CanvasObject {
 	icon2 := createIcon()
-	titleEntry, bindStr := tEntry()
+	titleEntry := widget.NewEntry()
 	titleEntry.Resize(fyne.NewSize(250, 30))
+	titleEntry.Text = txt
+	titleEntry.Refresh()
 
 	// Reloaded for each new points
-
 	noteBox := container.NewVBox()
 	//Holds note-entry widget and bullet icon
 	boxBox := container.NewBorder(nil, nil, nil, nil)
 	// Button to create new points
-	oneAdd := widget.NewButton("New Line", func() {
+	oneAdd := widget.NewButtonWithIcon("New Line", theme.ContentAddIcon(), func() {
+		del := widget.NewButtonWithIcon("", theme.CancelIcon(), func() {})
+		noteEntry := widget.NewEntry()
+		DelIcon := container.NewHBox(del)
+		boxBox = container.NewBorder(nil, nil, icon2, DelIcon, noteEntry)
+		noteBox.Add(boxBox)
+	})
+
+	notes, _ := read4rmBook("./bookpoints/" + fs)
+
+	for _, item := range notes {
+		noteEntry := widget.NewEntry()
+		noteEntry.SetText(item)
+		del := widget.NewButtonWithIcon("", theme.CancelIcon(), func() {})
+		DelIcon := container.NewHBox(del)
+		boxBox = container.NewBorder(nil, nil, icon2, DelIcon, noteEntry)
+		noteBox.Add(boxBox)
+		noteBox.Refresh()
+	}
+
+	saveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
+
+	})
+	saveButn.Resize(fyne.NewSize(30, 30))
+	DictionButn := widget.NewButton("Dictionaries", func() {})
+
+	butnLine := container.NewBorder(nil, nil, oneAdd, DictionButn)
+
+	fLine := container.NewVBox(titleEntry, saveButn)
+	topQuater := container.NewVBox(fLine, butnLine)
+	rightHandOldFl := container.NewBorder(topQuater, nil, nil, nil, noteBox)
+	rightScroll := container.NewScroll(rightHandOldFl)
+
+	return rightScroll
+}
+
+//Loads when note buuton is clicked
+func rightSide(txt string) fyne.CanvasObject {
+	icon2 := createIcon()
+	titleEntry := widget.NewEntry()
+	titleEntry.Text = txt
+	titleEntry.Resize(fyne.NewSize(250, 30))
+	titleEntry.Refresh()
+
+	// Reloaded for each new points
+	noteBox := container.NewVBox()
+	//Holds note-entry widget and bullet icon
+	boxBox := container.NewBorder(nil, nil, nil, nil)
+	// Button to create new points
+	oneAdd := widget.NewButtonWithIcon("New Line", theme.ContentAddIcon(), func() {
 		del := widget.NewButtonWithIcon("", theme.CancelIcon(), func() {})
 		noteEntry := widget.NewEntry()
 		DelIcon := container.NewHBox(del)
@@ -82,54 +119,62 @@ func rightSide() fyne.CanvasObject {
 		}
 	})
 
-	//doubleAdd := widget.NewButton("Double", func() {
-	//	icon2 := createIcon()
-	//	noteEntry := widget.NewMultiLineEntry()
-	//	boxBox = container.NewBorder(nil, nil, icon2, nil, noteEntry)
-	//	noteBox.Add(boxBox)
-	//})
-	SaveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
-		txt, _ := bindStr.Get()
+	saveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
+		//txt, _ := bindStr.Get()
+		//	title := read4Title()
 
-		write2Titile(txt, txt)
+		//	for _, elem := range title {
+
+		//	}
+
+		//	write2Titile(txt, txt)
 	})
-	SaveButn.Resize(fyne.NewSize(30, 30))
+	saveButn.Resize(fyne.NewSize(30, 30))
 	DictionButn := widget.NewButton("Dictionaries", func() {})
 
-	ButnLine := container.NewBorder(nil, nil, oneAdd, SaveButn, DictionButn)
+	butnLine := container.NewBorder(nil, nil, oneAdd, DictionButn)
 
-	topQuater := container.NewVBox(titleEntry, ButnLine)
+	fLine := container.NewVBox(titleEntry, saveButn)
+	topQuater := container.NewVBox(fLine, butnLine)
 	rightHand2 := container.NewBorder(topQuater, nil, nil, nil, noteBox)
 
 	return rightHand2
 }
 
-func leftSide(cont *fyne.Container) fyne.CanvasObject {
+func leftSide(cont *fyne.Container, title []string) fyne.CanvasObject {
+
 	lst := container.NewVBox()
+
+	folder, _ := os.ReadDir("./bookpoints/")
+	for _, dirFile := range folder {
+		name := strings.TrimSuffix(dirFile.Name(), ".txt")
+		r := rightSidewithFile(name, dirFile.Name())
+		oldFlButn := widget.NewButton(name, func() {
+
+			for _, elem := range cont.Objects {
+				cont.Remove(elem)
+			}
+			cont.Add(r)
+		})
+		oldFlButn.Refresh()
+		lst.Objects = append(lst.Objects, oldFlButn)
+	}
 
 	addButn := widget.NewToolbar(
 		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
 
 			lstButn := &widget.Button{}
 			lstButn.Text = "Untitiled"
-			r := rightSide()
+			r := rightSide(lstButn.Text)
 			lstButn.OnTapped = func() {
-
-				//time.Sleep(10 * time.Millisecond)
-
-				lstButn.Importance = widget.HighImportance
-				lstButn.Refresh()
-
 				for _, elem := range cont.Objects {
 					cont.Remove(elem)
 				}
 				cont.Objects = append(cont.Objects, r)
 			}
-			lstButn.Importance = widget.LowImportance
 
 			//for the left side
 			lst.Objects = append(lst.Objects, lstButn)
-
 		}),
 	)
 
@@ -141,8 +186,8 @@ func leftSide(cont *fyne.Container) fyne.CanvasObject {
 func loadUI() fyne.CanvasObject {
 	fsttext := container.NewCenter(widget.NewLabel("Please Select a book!"))
 	emptyCont := container.NewBorder(nil, nil, nil, nil, fsttext)
-
-	l := leftSide(emptyCont)
+	titles := read4Title()
+	l := leftSide(emptyCont, titles)
 
 	simp := container.NewHSplit(l, emptyCont)
 	simp.Offset = 0.25
@@ -153,10 +198,9 @@ func loadUI() fyne.CanvasObject {
 func main() {
 	app := app.New()
 	wind := app.NewWindow("BookTakes")
-	if wind.FullScreen() != true {
-		wind.SetMaster()
-		//wind.SetFullScreen(true)
-	}
+
+	wind.SetMaster()
+	//wind.SetFullScreen(true)
 	wind.Resize(fyne.NewSize(600, 600))
 
 	fullWind := container.NewBorder(header(), nil, nil, nil, loadUI())
