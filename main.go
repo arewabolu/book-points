@@ -1,6 +1,8 @@
 package main
 
 import (
+	"errors"
+	"fmt"
 	"image/color"
 	"os"
 	"strings"
@@ -9,6 +11,8 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -40,13 +44,16 @@ func header() fyne.CanvasObject {
 	return header
 }
 
-// Creates a Title entry
-
-func rightSidewithFile(txt string, fs string) fyne.CanvasObject {
+func rightSidewithFile(txt string) fyne.CanvasObject {
 	icon2 := createIcon()
 	titleEntry := widget.NewEntry()
+	titleBind := binding.NewString()
 	titleEntry.Resize(fyne.NewSize(250, 30))
 	titleEntry.Text = txt
+	titleEntry.OnChanged = func(s string) {
+		titleBind.Set(s)
+		titleEntry.Bind(titleBind)
+	}
 	titleEntry.Refresh()
 
 	// Reloaded for each new points
@@ -57,16 +64,22 @@ func rightSidewithFile(txt string, fs string) fyne.CanvasObject {
 	oneAdd := widget.NewButtonWithIcon("New Line", theme.ContentAddIcon(), func() {
 		del := widget.NewButtonWithIcon("", theme.CancelIcon(), func() {})
 		noteEntry := widget.NewEntry()
+		noteEntry.OnChanged = func(s string) {
+
+		}
 		DelIcon := container.NewHBox(del)
 		boxBox = container.NewBorder(nil, nil, icon2, DelIcon, noteEntry)
 		noteBox.Add(boxBox)
 	})
 
-	notes, _ := read4rmBook("./bookpoints/" + fs)
+	basedir := getBase()
+	notes, _ := read4rmBook(basedir + txt + ".txt")
 
 	for _, item := range notes {
 		noteEntry := widget.NewEntry()
 		noteEntry.SetText(item)
+		os.Getwd()
+
 		del := widget.NewButtonWithIcon("", theme.CancelIcon(), func() {})
 		DelIcon := container.NewHBox(del)
 		boxBox = container.NewBorder(nil, nil, icon2, DelIcon, noteEntry)
@@ -75,7 +88,10 @@ func rightSidewithFile(txt string, fs string) fyne.CanvasObject {
 	}
 
 	saveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
+		text, _ := titleBind.Get()
 
+		err := titleWriter(txt, text)
+		fmt.Println(err)
 	})
 	saveButn.Resize(fyne.NewSize(30, 30))
 	DictionButn := widget.NewButton("Dictionaries", func() {})
@@ -94,7 +110,13 @@ func rightSidewithFile(txt string, fs string) fyne.CanvasObject {
 func rightSide(txt string) fyne.CanvasObject {
 	icon2 := createIcon()
 	titleEntry := widget.NewEntry()
+	titleBind := binding.NewString()
 	titleEntry.Text = txt
+	titleEntry.OnChanged = func(s string) {
+		titleBind.Set(s)
+		titleEntry.Bind(titleBind)
+
+	}
 	titleEntry.Resize(fyne.NewSize(250, 30))
 	titleEntry.Refresh()
 
@@ -120,14 +142,7 @@ func rightSide(txt string) fyne.CanvasObject {
 	})
 
 	saveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
-		//txt, _ := bindStr.Get()
-		//	title := read4Title()
 
-		//	for _, elem := range title {
-
-		//	}
-
-		//	write2Titile(txt, txt)
 	})
 	saveButn.Resize(fyne.NewSize(30, 30))
 	DictionButn := widget.NewButton("Dictionaries", func() {})
@@ -141,30 +156,34 @@ func rightSide(txt string) fyne.CanvasObject {
 	return rightHand2
 }
 
-func leftSide(cont *fyne.Container, title []string) fyne.CanvasObject {
+func leftSide(cont *fyne.Container) fyne.CanvasObject {
 
 	lst := container.NewVBox()
-
-	folder, _ := os.ReadDir("./bookpoints/")
+	basedir := getBase()
+	folder, _ := os.ReadDir(basedir)
 	for _, dirFile := range folder {
-		name := strings.TrimSuffix(dirFile.Name(), ".txt")
-		r := rightSidewithFile(name, dirFile.Name())
-		oldFlButn := widget.NewButton(name, func() {
+		if strings.HasSuffix(dirFile.Name(), ".txt") {
+			name := strings.TrimSuffix(dirFile.Name(), ".txt")
+			r := rightSidewithFile(name)
+			oldFlButn := widget.NewButton(name, func() {
 
-			for _, elem := range cont.Objects {
-				cont.Remove(elem)
-			}
-			cont.Add(r)
-		})
-		oldFlButn.Refresh()
-		lst.Objects = append(lst.Objects, oldFlButn)
+				for _, elem := range cont.Objects {
+					cont.Remove(elem)
+				}
+				cont.Add(r)
+			})
+			oldFlButn.Refresh()
+			lst.Objects = append(lst.Objects, oldFlButn)
+
+		}
+
 	}
 
 	addButn := widget.NewToolbar(
 		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
 
 			lstButn := &widget.Button{}
-			lstButn.Text = "Untitiled"
+			lstButn.Text = "Untitled"
 			r := rightSide(lstButn.Text)
 			lstButn.OnTapped = func() {
 				for _, elem := range cont.Objects {
@@ -186,8 +205,8 @@ func leftSide(cont *fyne.Container, title []string) fyne.CanvasObject {
 func loadUI() fyne.CanvasObject {
 	fsttext := container.NewCenter(widget.NewLabel("Please Select a book!"))
 	emptyCont := container.NewBorder(nil, nil, nil, nil, fsttext)
-	titles := read4Title()
-	l := leftSide(emptyCont, titles)
+
+	l := leftSide(emptyCont)
 
 	simp := container.NewHSplit(l, emptyCont)
 	simp.Offset = 0.25
@@ -202,6 +221,12 @@ func main() {
 	wind.SetMaster()
 	//wind.SetFullScreen(true)
 	wind.Resize(fyne.NewSize(600, 600))
+
+	err := makeDir()
+	if err != nil {
+		err = errors.New("unable to create new directory")
+		dialog.NewError(err, wind)
+	}
 
 	fullWind := container.NewBorder(header(), nil, nil, nil, loadUI())
 	wind.SetContent(fullWind)

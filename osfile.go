@@ -16,9 +16,25 @@ func writer(wr *os.File, s string) {
 	}
 }
 
-//should be run concurrently?
+func getBase() string {
+	home, _ := os.UserHomeDir()
+	basedir := home + "/booktakes/"
+	return basedir
+}
 
+func makeDir() error {
+	//test on windows
+	home, _ := os.UserHomeDir()
+	err := os.MkdirAll(home+"/booktakes/", os.ModePerm)
+
+	return err
+}
+
+//should be run concurrently?
+//writes to info to name(bookfile)
+//called when save is clicked
 func write2Book(name, info string) {
+
 	//when best to use append vs write only
 	title := name + ".txt"
 	openBook, err := os.OpenFile(title, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -29,33 +45,12 @@ func write2Book(name, info string) {
 	writer(openBook, info)
 }
 
-func titleWriter(nwTitle string) {
-	flPath := "./bookpoints/bookTitleList.txt"
-	openFile, err := os.OpenFile(flPath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	read4Title()
-	defer openFile.Close()
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	writer(openFile, nwTitle)
-}
-
-func read4Title() []string {
-	flPath := "./bookpoints/bookTitleList.txt"
-	file, err := os.Open(flPath)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	nwScan := bufio.NewScanner(file)
-	fileSlice := make([]string, 0)
-
-	nwScan.Split(bufio.ScanLines)
-	for nwScan.Scan() {
-		fileSlice = append(fileSlice, nwScan.Text())
-	}
-	return fileSlice
+func titleWriter(oldTitle, nwTitle string) error {
+	flPath := getBase()
+	oldTitle = oldTitle + ".txt"
+	nwTitle = nwTitle + ".txt"
+	err := os.Rename(flPath+oldTitle, flPath+nwTitle)
+	return err
 }
 
 func read4rmBook(filepath string) ([]string, error) {
