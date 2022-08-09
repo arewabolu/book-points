@@ -5,9 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
-
-// checkSize returns the size of a file
 
 func writer(wr *os.File, s string) {
 	_, err := wr.WriteString(s + "\n")
@@ -16,18 +15,42 @@ func writer(wr *os.File, s string) {
 	}
 }
 
-func getBase() string {
-	home, _ := os.UserHomeDir()
-	basedir := home + "/booktakes/"
-	return basedir
+func getHome() (string, error) {
+	home, err := os.UserHomeDir()
+
+	return home, err
 }
 
+//Return file directory for notes.
+func getBase() (string, error) {
+	home, err := getHome()
+	basedir := home + "/booktakes/"
+	return basedir, err
+}
+
+//Used to create Notes directory at the start of the App
+// If directory already exists, It does nothing and returns nil.
 func makeDir() error {
 	//test on windows
-	home, _ := os.UserHomeDir()
+	home, homeDirErr := os.UserHomeDir()
+	if homeDirErr != nil {
+		return homeDirErr
+	}
 	err := os.MkdirAll(home+"/booktakes/", os.ModePerm)
-
 	return err
+}
+
+//returns a list of files in basedir
+func dirIterator(basedir string) []string {
+	folder, _ := os.ReadDir(basedir)
+	nameSlice := make([]string, 0)
+	for _, dirFile := range folder {
+		if strings.HasSuffix(dirFile.Name(), ".txt") {
+			name := strings.TrimSuffix(dirFile.Name(), ".txt")
+			nameSlice = append(nameSlice, name)
+		}
+	}
+	return nameSlice
 }
 
 //should be run concurrently?
@@ -46,13 +69,19 @@ func write2Book(name, info string) {
 }
 
 func titleWriter(oldTitle, nwTitle string) error {
-	flPath := getBase()
-	oldTitle = oldTitle + ".txt"
+	flPath, _ := getBase()
 	nwTitle = nwTitle + ".txt"
-	err := os.Rename(flPath+oldTitle, flPath+nwTitle)
+	_, err := os.Create(flPath + nwTitle)
+	if nwTitle != "" {
+		oldTitle = oldTitle + ".txt"
+		err := os.Rename(flPath+oldTitle, flPath+nwTitle)
+		return err
+	}
 	return err
 }
 
+//Reads notes from files and returns
+//every new line as an item in a slice
 func read4rmBook(filepath string) ([]string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
