@@ -39,7 +39,6 @@ func header() fyne.CanvasObject {
 //Loads when note buuton is clicked
 func rightSide(txt, dir string) fyne.CanvasObject {
 	title, bind := titleEntry(txt)
-	title.Refresh()
 	//creates icon for notebox
 	icon2 := createIcon()
 
@@ -103,37 +102,31 @@ func rightSide(txt, dir string) fyne.CanvasObject {
 }
 
 func leftSide(cont *fyne.Container) fyne.CanvasObject {
-	lst := container.NewVBox()
+	addButn := widget.NewToolbar()
+	leftHand := container.NewBorder(addButn, nil, nil, nil)
+
 	basedir, _ := getBase()
 	names := dirIterator(basedir)
 
-	for _, flName := range names {
-		r := rightSide(flName, basedir)
-		oldFlButn := widget.NewButton(flName, func() {
-			cont.RemoveAll()
-			cont.Add(r)
+	l := widget.NewList(
+		func() int { return len(names) },
+		func() fyne.CanvasObject {
+			return widget.NewLabel("Untitled")
+		},
+		func(lii widget.ListItemID, co fyne.CanvasObject) {
+			co.(*widget.Label).SetText(names[lii])
 		})
-
-		lst.Objects = append(lst.Objects, oldFlButn)
+	l.OnSelected = func(id widget.ListItemID) {
+		rL := rightSide(names[id], basedir)
+		cont.RemoveAll()
+		cont.Add(rL)
 
 	}
-
-	addButn := widget.NewToolbar(
-		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
-			lstButn := &widget.Button{}
-
-			lstButn.Text = "Untitled"
-			r := rightSide(lstButn.Text, basedir)
-			lstButn.OnTapped = func() {
-				cont.RemoveAll()
-				cont.Objects = append(cont.Objects, r)
-			}
-
-			lst.Objects = append(lst.Objects, lstButn)
-		}),
-	)
-
-	leftHand := container.NewBorder(addButn, nil, nil, nil, lst)
+	addButn.Append(widget.NewToolbarAction(theme.ContentAddIcon(), func() {
+		names = append(names, "Untitled")
+		leftHand.Objects = append(leftHand.Objects)
+	}))
+	leftHand.Objects = append(leftHand.Objects, l)
 	lScroll := container.NewScroll(leftHand)
 	return lScroll
 }
