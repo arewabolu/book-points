@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
@@ -61,7 +62,6 @@ func rightSide(txt, dir string) fyne.CanvasObject {
 		boxBox = container.NewBorder(nil, nil, icon2, DelIcon, noteEntry)
 		butnMap[delButn] = index
 		noteBox.Add(boxBox)
-		fmt.Println(butnMap)
 		delButn.OnTapped = func() {
 			val := butnMap[delButn]
 			noteBox.Objects = removeElementByIndex(noteBox.Objects, val)
@@ -102,31 +102,36 @@ func rightSide(txt, dir string) fyne.CanvasObject {
 }
 
 func leftSide(cont *fyne.Container) fyne.CanvasObject {
-	addButn := widget.NewToolbar()
-	leftHand := container.NewBorder(addButn, nil, nil, nil)
 
-	basedir, _ := getBase()
-	names := dirIterator(basedir)
+	baseDir, _ := getBase()
+	names := dirIterator(baseDir)
 
-	l := widget.NewList(
-		func() int { return len(names) },
+	nameBinding := binding.BindStringList(&names)
+
+	nameList := widget.NewListWithData(
+		nameBinding,
 		func() fyne.CanvasObject {
 			return widget.NewLabel("Untitled")
 		},
-		func(lii widget.ListItemID, co fyne.CanvasObject) {
-			co.(*widget.Label).SetText(names[lii])
-		})
-	l.OnSelected = func(id widget.ListItemID) {
-		rL := rightSide(names[id], basedir)
+		// binds the template item above to a string binding
+		func(data binding.DataItem, co fyne.CanvasObject) {
+			co.(*widget.Label).Bind(data.(binding.String))
+		},
+	)
+	nameList.OnSelected = func(id widget.ListItemID) {
+		rL := rightSide(names[id], baseDir)
 		cont.RemoveAll()
 		cont.Add(rL)
-
 	}
-	addButn.Append(widget.NewToolbarAction(theme.ContentAddIcon(), func() {
-		names = append(names, "Untitled")
-		leftHand.Objects = append(leftHand.Objects)
-	}))
-	leftHand.Objects = append(leftHand.Objects, l)
+	nameList.OnUnselected = func(id widget.ListItemID) {
+		cont.RemoveAll()
+	}
+
+	addButn := widget.NewToolbar(
+		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
+			nameBinding.Append("Untitled")
+		}))
+	leftHand := container.NewBorder(addButn, nil, nil, nil, nameList)
 	lScroll := container.NewScroll(leftHand)
 	return lScroll
 }
