@@ -3,17 +3,9 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 )
-
-func writer(wr *os.File, s string) {
-	_, err := wr.WriteString(s + "\n")
-	if err != nil {
-		fmt.Println(err)
-	}
-}
 
 func getHome() (string, error) {
 	home, err := os.UserHomeDir()
@@ -21,14 +13,14 @@ func getHome() (string, error) {
 	return home, err
 }
 
-//Return file directory for notes.
+// Return file directory for notes.
 func getBase() (string, error) {
 	home, err := getHome()
 	basedir := home + "/booktakes/"
 	return basedir, err
 }
 
-//Used to create Notes directory at the start of the App
+// Used to create Notes directory at the start of the App
 // If directory already exists, It does nothing and returns nil.
 func makeDir() error {
 	//test on windows
@@ -40,7 +32,7 @@ func makeDir() error {
 	return err
 }
 
-//returns a list of files in basedir
+// returns a list of files in basedir
 func dirIterator(basedir string) []string {
 	folder, _ := os.ReadDir(basedir)
 	nameSlice := make([]string, 0)
@@ -53,35 +45,52 @@ func dirIterator(basedir string) []string {
 	return nameSlice
 }
 
-//should be run concurrently?
-//writes to info to name(bookfile)
-//called when save is clicked
-func write2Book(name, info string) {
-
+// should be run concurrently?
+// writes to info to name(bookfile)
+// called when save is clicked
+func write2Book(title string, noteList []string) {
+	flPath, _ := getBase()
 	//when best to use append vs write only
-	title := name + ".txt"
-	openBook, err := os.OpenFile(title, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	titleTxt := flPath + title + ".txt"
+	openBook, err := os.OpenFile(titleTxt, os.O_APPEND|os.O_WRONLY, 0644)
 	defer openBook.Close()
 	if err != nil {
 		fmt.Println(err)
 	}
-	writer(openBook, info)
-}
+	for _, noteLines := range noteList {
+		openBook.WriteString(noteLines + "\n")
 
-func titleWriter(oldTitle, nwTitle string) error {
-	flPath, _ := getBase()
-	nwTitle = nwTitle + ".txt"
-	_, err := os.Create(flPath + nwTitle)
-	if nwTitle != "" {
-		oldTitle = oldTitle + ".txt"
-		err := os.Rename(flPath+oldTitle, flPath+nwTitle)
-		return err
 	}
-	return err
+	openBook.Sync()
 }
 
-//Reads notes from files and returns
-//every new line as an item in a slice
+func titleWriter(oldTitle, nwTitle string) (string, error) {
+	flPath, _ := getBase()
+
+	switch {
+	case nwTitle == "":
+		oldTitleTxt := oldTitle + ".txt"
+		_, err := os.Create(flPath + oldTitleTxt)
+		return oldTitle, err
+	case oldTitle == "":
+		nwTitleTxt := nwTitle + ".txt"
+		_, err := os.Create(flPath + nwTitleTxt)
+		return nwTitle, err
+	case nwTitle == oldTitle:
+		return nwTitle, nil
+	case nwTitle != oldTitle:
+		nwTitleTxt := nwTitle + ".txt"
+		oldTitleTxt := oldTitle + ".txt"
+		err := os.Rename(flPath+oldTitleTxt, flPath+nwTitleTxt)
+		return nwTitle, err
+
+	}
+
+	return "", nil
+}
+
+// Reads notes from files and returns
+// every new line as an item in a slice
 func read4rmBook(filepath string) ([]string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
@@ -90,15 +99,18 @@ func read4rmBook(filepath string) ([]string, error) {
 
 	scanner := bufio.NewScanner(file)
 	lineText := make([]string, 0)
+
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	for scanner.Scan() {
 		if scanner.Text() == "" {
 			continue
 		}
+
 		lineText = append(lineText, scanner.Text())
+
 	}
 
 	return lineText, nil
