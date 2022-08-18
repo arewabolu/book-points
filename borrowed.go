@@ -1,6 +1,10 @@
 package main
 
 import (
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
@@ -15,4 +19,23 @@ func createIcon() *widget.Icon {
 
 func removeElementByIndex[T any](slice []T, index int) []T {
 	return append(slice[:index], slice[index+1:]...)
+}
+
+func saveFunc(txt string, titleBind binding.String, noteBindings binding.ExternalStringList, w fyne.Window) {
+	titleText, _ := titleBind.Get()
+	writtenTitle, titleWriterErr := titleWriter(txt, titleText)
+
+	if titleWriterErr != nil {
+		nwDialog := dialog.NewError(titleWriterErr, w)
+		nwDialog.Show()
+	}
+
+	noteList, err2 := noteBindings.Get()
+	if err2 != nil {
+		anApp := app.New()
+		errWind := anApp.NewWindow("error")
+		nwDialog := dialog.NewError(err2, errWind)
+		nwDialog.Show()
+	}
+	write2Book(writtenTitle, noteList)
 }
