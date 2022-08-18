@@ -61,26 +61,30 @@ func write2Book(title string, noteList []string) {
 		openBook.WriteString(noteLines + "\n")
 
 	}
-	openBook.Sync()
 }
 
 func titleWriter(oldTitle, nwTitle string) (string, error) {
 	flPath, _ := getBase()
+	oldTitleTxt := oldTitle + ".txt"
+	nwTitleTxt := nwTitle + ".txt"
 
 	switch {
 	case nwTitle == "":
-		oldTitleTxt := oldTitle + ".txt"
 		_, err := os.Create(flPath + oldTitleTxt)
 		return oldTitle, err
+
 	case oldTitle == "":
-		nwTitleTxt := nwTitle + ".txt"
 		_, err := os.Create(flPath + nwTitleTxt)
 		return nwTitle, err
+
+	case oldTitle == "Untitled" && len(nwTitle) > 1:
+		_, err := os.Create(flPath + nwTitleTxt)
+		return nwTitle, err
+
 	case nwTitle == oldTitle:
 		return nwTitle, nil
+
 	case nwTitle != oldTitle:
-		nwTitleTxt := nwTitle + ".txt"
-		oldTitleTxt := oldTitle + ".txt"
 		err := os.Rename(flPath+oldTitleTxt, flPath+nwTitleTxt)
 		return nwTitle, err
 
