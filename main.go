@@ -2,8 +2,8 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"image/color"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -50,7 +50,7 @@ func titleEntry(text string) (*widget.Entry, binding.String) {
 }
 
 // Loads when note buuton is clicked
-func loadRightSide(txt, dir string, ID int) fyne.CanvasObject {
+func loadRightSide(txt, dir string, ID int, w fyne.Window) fyne.CanvasObject {
 	title, titleBind := titleEntry(txt)
 	//creates icon for notebox
 	icon2 := createIcon()
@@ -69,11 +69,14 @@ func loadRightSide(txt, dir string, ID int) fyne.CanvasObject {
 	listing := widget.NewListWithData(
 		noteBindings,
 		func() fyne.CanvasObject {
-			delButn := widget.NewButtonWithIcon("", theme.CancelIcon(), func() {})
-			delIcon := container.NewHBox(delButn)
+			delButn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
+
+			})
+
+			delButn.Resize(fyne.NewSize(10, 10))
 			noteEntry := widget.NewEntry()
 
-			boxBox = container.NewBorder(nil, nil, icon2, delIcon, noteEntry)
+			boxBox = container.NewBorder(nil, nil, icon2, delButn, noteEntry)
 			return boxBox
 		},
 		func(di binding.DataItem, co fyne.CanvasObject) {
@@ -89,14 +92,16 @@ func loadRightSide(txt, dir string, ID int) fyne.CanvasObject {
 	}
 
 	saveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
-		titleText, _ := titleBind.Get()
-		writtenTitle, titleWriterErr := titleWriter(txt, titleText)
-		fmt.Println(titleWriterErr)
-		noteList, err2 := noteBindings.Get()
-		fmt.Println(err2)
-		write2Book(writtenTitle, noteList)
+		saveFunc(txt, titleBind, noteBindings, w)
 
 	})
+	go func() {
+		for {
+			time.Sleep(1 * time.Second)
+			saveFunc(txt, titleBind, noteBindings, w)
+
+		}
+	}()
 	saveButn.Resize(fyne.NewSize(30, 30))
 	DictionButn := widget.NewButton("Dictionaries", func() {})
 
@@ -110,7 +115,7 @@ func loadRightSide(txt, dir string, ID int) fyne.CanvasObject {
 	return rightScroll
 }
 
-func leftSide(cont *fyne.Container) fyne.CanvasObject {
+func leftSide(cont *fyne.Container, w fyne.Window) fyne.CanvasObject {
 
 	baseDir, _ := getBase()
 	names := dirIterator(baseDir)
@@ -128,7 +133,7 @@ func leftSide(cont *fyne.Container) fyne.CanvasObject {
 		},
 	)
 	nameList.OnSelected = func(id widget.ListItemID) {
-		rL := loadRightSide(names[id], baseDir, id)
+		rL := loadRightSide(names[id], baseDir, id, w)
 		cont.RemoveAll()
 		cont.Add(rL)
 	}
@@ -146,14 +151,22 @@ func leftSide(cont *fyne.Container) fyne.CanvasObject {
 	return lScroll
 }
 
-func loadUI() fyne.CanvasObject {
+func loadUI(w fyne.Window) fyne.CanvasObject {
 	fsttext := container.NewCenter(widget.NewLabel("Please Select a book!"))
 	emptyCont := container.NewBorder(nil, nil, nil, nil, fsttext)
 
-	l := leftSide(emptyCont)
+	l := leftSide(emptyCont, w)
 
 	simp := container.NewHSplit(l, emptyCont)
 	simp.Offset = 0.25
+
+	go func() {
+		for {
+			time.Sleep(5 * time.Second)
+			//time.NewTicker(5 * time.Second)
+			l.Refresh()
+		}
+	}()
 
 	return simp
 }
@@ -172,7 +185,7 @@ func main() {
 		dialog.NewError(err, wind)
 	}
 
-	fullWind := container.NewBorder(header(), nil, nil, nil, loadUI())
+	fullWind := container.NewBorder(header(), nil, nil, nil, loadUI(wind))
 	wind.SetContent(fullWind)
 	wind.ShowAndRun()
 }
