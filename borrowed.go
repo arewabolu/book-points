@@ -26,16 +26,17 @@ func saveFunc(txt string, titleBind binding.String, noteBindings binding.Externa
 	writtenTitle, titleWriterErr := titleWriter(txt, titleText)
 
 	if titleWriterErr != nil {
-		nwDialog := dialog.NewError(titleWriterErr, w)
-		nwDialog.Show()
+		anApp := app.New()
+		errWind := anApp.NewWindow("error")
+		dialog.ShowError(titleWriterErr, errWind)
 	}
 
 	noteList, err2 := noteBindings.Get()
 	if err2 != nil {
 		anApp := app.New()
 		errWind := anApp.NewWindow("error")
-		nwDialog := dialog.NewError(err2, errWind)
-		nwDialog.Show()
+		dialog.ShowError(err2, errWind)
+
 	}
 	write2Book(writtenTitle, noteList)
 }
