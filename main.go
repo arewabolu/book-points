@@ -14,6 +14,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"golang.org/x/exp/slices"
 )
 
 // text-header for application
@@ -51,30 +52,28 @@ func titleEntry(text string) (*widget.Entry, binding.String) {
 
 // Loads when note buuton is clicked
 func loadRightSide(txt, dir string, ID int, w fyne.Window) fyne.CanvasObject {
-	title, titleBind := titleEntry(txt)
-	//creates icon for notebox
-	icon2 := createIcon()
-
 	basedir, _ := getBase()
-	notes, _ := read4rmBook(basedir + txt + ".txt")
-	oneAdd := widget.NewButtonWithIcon("New Line", theme.ContentAddIcon(), func() {})
-
-	//noteBox := container.NewVBox()
-
+	title, titleBind := titleEntry(txt)
+	icon2 := createIcon()
 	boxBox := container.NewBorder(nil, nil, nil, nil)
+	notes, _ := read4rmBook(basedir + txt + ".txt")
 	noteBindings := binding.BindStringList(&notes)
+	oneAdd := widget.NewButtonWithIcon("New Line", theme.ContentAddIcon(), func() {
+		noteBindings.Append("")
+	})
 
 	//A trick for managing each lines id
 
 	listing := widget.NewListWithData(
 		noteBindings,
 		func() fyne.CanvasObject {
-			delButn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
-
-			})
-
-			delButn.Resize(fyne.NewSize(10, 10))
 			noteEntry := widget.NewEntry()
+			delButn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
+				position := slices.Index(notes, noteEntry.Text)
+				nwNote := removeElementByIndex(notes, position)
+				noteBindings.Set(nwNote)
+			})
+			delButn.Resize(fyne.NewSize(10, 10))
 
 			boxBox = container.NewBorder(nil, nil, icon2, delButn, noteEntry)
 			return boxBox
@@ -84,27 +83,13 @@ func loadRightSide(txt, dir string, ID int, w fyne.Window) fyne.CanvasObject {
 		},
 	)
 
-	// Button to create new points
-
-	oneAdd.OnTapped = func() {
-		noteBindings.Append("")
-
-	}
-
 	saveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
 		saveFunc(txt, titleBind, noteBindings, w)
 
 	})
-	go func() {
-		for {
-			time.Sleep(1 * time.Second)
-			saveFunc(txt, titleBind, noteBindings, w)
-
-		}
-	}()
 	saveButn.Resize(fyne.NewSize(30, 30))
-	DictionButn := widget.NewButton("Dictionaries", func() {})
 
+	DictionButn := widget.NewButton("Dictionaries", func() {})
 	butnLine := container.NewBorder(nil, nil, oneAdd, DictionButn)
 
 	fLine := container.NewVBox(title, saveButn)
@@ -141,6 +126,14 @@ func leftSide(cont *fyne.Container, w fyne.Window) fyne.CanvasObject {
 		cont.RemoveAll()
 	}
 
+	go func() {
+		for {
+			time.Sleep(2 * time.Second)
+			//time.NewTicker(5 * time.Second)
+			nameList.Refresh()
+		}
+	}()
+
 	addButn := widget.NewToolbar(
 		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
 
@@ -159,14 +152,6 @@ func loadUI(w fyne.Window) fyne.CanvasObject {
 
 	simp := container.NewHSplit(l, emptyCont)
 	simp.Offset = 0.25
-
-	go func() {
-		for {
-			time.Sleep(5 * time.Second)
-			//time.NewTicker(5 * time.Second)
-			l.Refresh()
-		}
-	}()
 
 	return simp
 }
