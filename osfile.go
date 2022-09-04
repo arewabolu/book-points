@@ -53,10 +53,10 @@ func write2Book(title string, noteList []string) {
 	//when best to use append vs write only
 	titleTxt := flPath + title + ".txt"
 	openBook, err := os.OpenFile(titleTxt, os.O_APPEND|os.O_WRONLY, 0644)
-	defer openBook.Close()
 	if err != nil {
 		fmt.Println(err)
 	}
+	defer openBook.Close()
 	for _, noteLines := range noteList {
 		openBook.WriteString(noteLines + "\n")
 

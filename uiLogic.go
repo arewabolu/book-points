@@ -126,9 +126,9 @@ func leftSide(cont *fyne.Container, w fyne.Window) fyne.CanvasObject {
 
 	go func() {
 		for {
-			time.Sleep(2 * time.Second)
+			time.NewTicker(2 * time.Second)
 			//time.NewTicker(5 * time.Second)
-			bindingFunc().Reload()
+			nameList.Refresh()
 		}
 	}()
 
