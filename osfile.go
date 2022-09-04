@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// Returns the home directory of users os
 func getHome() (string, error) {
 	home, err := os.UserHomeDir()
 
@@ -32,7 +33,7 @@ func makeDir() error {
 	return err
 }
 
-// returns a list of files in basedir
+// returns a list of names of files in basedir
 func dirIterator(basedir string) []string {
 	folder, _ := os.ReadDir(basedir)
 	nameSlice := make([]string, 0)
@@ -47,7 +48,7 @@ func dirIterator(basedir string) []string {
 
 // should be run concurrently?
 // writes to info to name(bookfile)
-// called when save is clicked
+// called when save is tapped
 func write2Book(title string, noteList []string) {
 	flPath, _ := getBase()
 	//when best to use append vs write only
@@ -128,6 +129,6 @@ func read4rmBook(filepath string) ([]string, error) {
 
 func delItem(text string) error {
 	baseDir, _ := getBase()
-	err := os.Remove(baseDir + text + "txts")
+	err := os.Remove(baseDir + text + ".txt")
 	return err
 }
