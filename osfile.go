@@ -63,6 +63,12 @@ func write2Book(title string, noteList []string) {
 	}
 }
 
+func getNoteList() []string {
+	baseDir, _ := getBase()
+	names := dirIterator(baseDir)
+	return names
+}
+
 func titleWriter(oldTitle, nwTitle string) (string, error) {
 	flPath, _ := getBase()
 	oldTitleTxt := oldTitle + ".txt"
@@ -118,4 +124,10 @@ func read4rmBook(filepath string) ([]string, error) {
 	}
 
 	return lineText, nil
+}
+
+func delItem(text string) error {
+	baseDir, _ := getBase()
+	err := os.Remove(baseDir + text + "txts")
+	return err
 }
