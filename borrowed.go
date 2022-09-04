@@ -40,3 +40,9 @@ func saveFunc(txt string, titleBind binding.String, noteBindings binding.Externa
 	}
 	write2Book(writtenTitle, noteList)
 }
+
+func bindingFunc() binding.ExternalStringList {
+	names := getNoteList()
+	nameBinding := binding.BindStringList(&names)
+	return nameBinding
+}
