@@ -2,7 +2,6 @@ package main
 
 import (
 	"image/color"
-	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -51,15 +50,11 @@ func titleEntry(text string) (*widget.Entry, binding.String) {
 func loadRightSide(name []string, ID int, w fyne.Window) fyne.CanvasObject {
 	baseDir, _ := getBase()
 	title, titleBind := titleEntry(name[ID])
-	icon2 := createIcon()
+	//fmt.Println("This func was called 1")
+	icon2 := createIcon() //Not called for some reason
 	boxBox := container.NewBorder(nil, nil, nil, nil)
 	notes, _ := read4rmBook(baseDir + name[ID] + ".txt")
 	noteBindings := binding.BindStringList(&notes)
-	oneAdd := widget.NewButtonWithIcon("New Line", theme.ContentAddIcon(), func() {
-		noteBindings.Append("")
-	})
-
-	//A trick for managing each lines id
 
 	listing := widget.NewListWithData(
 		noteBindings,
@@ -67,12 +62,15 @@ func loadRightSide(name []string, ID int, w fyne.Window) fyne.CanvasObject {
 			noteEntry := widget.NewEntry()
 			delButn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
 				position := slices.Index(notes, noteEntry.Text)
-				nwNote := removeElementByIndex(notes, position)
-				noteBindings.Set(nwNote)
+				nwList := removeElementByIndex(notes, position)
+				noteBindings.Set(nwList)
 			})
-			delButn.Resize(fyne.NewSize(10, 10))
 
-			boxBox = container.NewBorder(nil, nil, icon2, delButn, noteEntry)
+			delButn.Resize(fyne.NewSize(10, 10))
+			moveButn := widget.NewButtonWithIcon("", icon2.Resource, func() {
+
+			})
+			boxBox = container.NewBorder(nil, nil, moveButn, delButn, noteEntry)
 			return boxBox
 		},
 		func(di binding.DataItem, co fyne.CanvasObject) {
@@ -80,12 +78,13 @@ func loadRightSide(name []string, ID int, w fyne.Window) fyne.CanvasObject {
 		},
 	)
 
+	oneAdd := widget.NewButtonWithIcon("New Line", theme.ContentAddIcon(), func() {
+		noteBindings.Append("")
+	})
 	saveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
 		saveFunc(name[ID], titleBind, noteBindings, w)
-
 	})
 	saveButn.Resize(fyne.NewSize(30, 30))
-
 	DictionButn := widget.NewButton("Dictionaries", func() {})
 	butnLine := container.NewBorder(nil, nil, oneAdd, DictionButn)
 
@@ -98,14 +97,21 @@ func loadRightSide(name []string, ID int, w fyne.Window) fyne.CanvasObject {
 }
 
 func leftSide(cont *fyne.Container, w fyne.Window) fyne.CanvasObject {
+	names := getNoteList()
+	nameBinding := binding.BindStringList(&names)
 
 	nameList := widget.NewListWithData(
-		bindingFunc(),
+		nameBinding,
 		func() fyne.CanvasObject {
-			label := widget.NewLabel("Untitled")
+			label := widget.NewLabel("")
 			noteDel := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
-				delItem(label.Text)
-
+				position := slices.Index(names, label.Text)
+				//fmt.Println(label.Text)
+				//fmt.Println(position)
+				nwNote := removeElementByIndex(names, position)
+				nameBinding.Set(nwNote)
+				// todo
+				// resolve indiividual note deletion from directory
 			})
 			noteDel.Resize(fyne.NewSize(10, 10))
 
@@ -124,18 +130,17 @@ func leftSide(cont *fyne.Container, w fyne.Window) fyne.CanvasObject {
 		cont.RemoveAll()
 	}
 
-	go func() {
-		for {
-			time.NewTicker(2 * time.Second)
-			//time.NewTicker(5 * time.Second)
-			nameList.Refresh()
-		}
-	}()
+	//go func() {
+	//	for {
+	//		time.NewTicker(2 * time.Second)
+	//		//time.NewTicker(5 * time.Second)
+	//		nameList.Refresh()
+	//	}
+	//}()
 
 	addButn := widget.NewToolbar(
 		widget.NewToolbarAction(theme.ContentAddIcon(), func() {
-
-			bindingFunc().Append("Untitled")
+			nameBinding.Append("Untitled")
 		}))
 	leftHand := container.NewBorder(addButn, nil, nil, nil, nameList)
 	lScroll := container.NewScroll(leftHand)
