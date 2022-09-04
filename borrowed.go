@@ -10,7 +10,10 @@ import (
 )
 
 func createIcon() *widget.Icon {
-	resc, _ := LoadResourceFromPath("https://github.com/arewabolu/book-points/blob/main/Assets/icons/bullet?raw=true")
+	resc, err := LoadResourceFromPath("./Assets/icons/bullet")
+	if err != nil {
+		panic(err)
+	}
 	theme.NewThemedResource(resc)
 	icon := widget.NewIcon(resc)
 
@@ -41,8 +44,6 @@ func saveFunc(txt string, titleBind binding.String, noteBindings binding.Externa
 	write2Book(writtenTitle, noteList)
 }
 
-func bindingFunc() binding.ExternalStringList {
-	names := getNoteList()
-	nameBinding := binding.BindStringList(&names)
-	return nameBinding
+func bindingFunc() {
+
 }
