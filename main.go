@@ -23,14 +23,15 @@ func init() {
 }
 
 func main() {
+	w := new(window)
 	app := app.New()
-	wind := app.NewWindow("BookTakes")
+	w.wind = app.NewWindow("BookTakes")
 
-	wind.SetMaster()
+	w.wind.SetMaster()
 	//wind.SetFullScreen(true)
-	wind.Resize(fyne.NewSize(600, 600))
+	w.wind.Resize(fyne.NewSize(600, 600))
 
-	fullWind := container.NewBorder(header(), nil, nil, nil, loadUI(wind))
-	wind.SetContent(fullWind)
-	wind.ShowAndRun()
+	fullWind := container.NewBorder(header(), nil, nil, nil, loadUI(w.wind))
+	w.wind.SetContent(fullWind)
+	w.wind.ShowAndRun()
 }
