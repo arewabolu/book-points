@@ -10,7 +10,6 @@ import (
 // Returns the home directory of users os
 func getHome() (string, error) {
 	home, err := os.UserHomeDir()
-
 	return home, err
 }
 
@@ -102,6 +101,7 @@ func titleWriter(oldTitle, nwTitle string) (string, error) {
 
 // Reads notes from files and returns
 // every new line as an item in a slice
+// what if you just used os.ReadFile and convert its return value to string
 func read4rmBook(filepath string) ([]string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
