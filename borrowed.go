@@ -5,11 +5,9 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
 )
 
-func createIcon() *widget.Icon {
+/*func createIcon() *widget.Icon {
 	resc, err := LoadResourceFromPath("./Assets/icons/bullet")
 	if err != nil {
 		panic(err)
@@ -19,6 +17,17 @@ func createIcon() *widget.Icon {
 
 	return icon
 }
+*/
+//func createLockIcon() *widget.Icon {
+//	resc, err := LoadResourceFromPath("./Assets/icons/lock.png")
+//	if err != nil {
+//		panic(err)
+//	}
+//	theme.NewThemedResource(resc)
+//	icon := widget.NewIcon(resc)
+//
+//	return icon
+//}
 
 func removeElementByIndex[T any](slice []T, index int) []T {
 	return append(slice[:index], slice[index+1:]...)
@@ -42,8 +51,4 @@ func saveFunc(txt string, titleBind binding.String, noteBindings binding.Externa
 
 	}
 	write2Book(writtenTitle, noteList)
-}
-
-func bindingFunc() {
-
 }
