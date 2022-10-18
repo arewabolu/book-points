@@ -1,14 +1,12 @@
 package main
 
 import (
-	"errors"
 	"image/color"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -44,25 +42,16 @@ func titleEntry(text string) (*widget.Entry, binding.String) {
 	titleEntry.OnChanged = func(s string) {
 		titleBind.Set(s)
 		titleEntry.Bind(titleBind)
+		text = s
 	}
 	return titleEntry, titleBind
 }
 
-// Loads when note buuton is clicked
-func loadRightSide(names []string, ID int, w fyne.Window) fyne.CanvasObject {
+func loadRightSide(names []string, ID int, w fyne.Window, lH *fyne.Container) fyne.CanvasObject {
 	baseDir, _ := getBase()
 	title, titleBind := titleEntry(names[ID])
-	//fmt.Println("This func was called 1")
-	icon2 := createIcon() //Not called for some reason
-	boxBox := container.NewBorder(nil, nil, nil, nil)
 	notes, _ := read4rmBook(baseDir + names[ID] + ".txt")
 	noteBindings := binding.BindStringList(&notes)
-	var listing *widget.List
-
-	oneAdd := widget.NewButtonWithIcon("New Line", theme.ContentAddIcon(), func() {
-		noteBindings.Append("")
-
-	})
 
 	saveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
 		saveFunc(names[ID], titleBind, noteBindings, w)
@@ -70,34 +59,16 @@ func loadRightSide(names []string, ID int, w fyne.Window) fyne.CanvasObject {
 	saveButn.Resize(fyne.NewSize(30, 30))
 
 	DictionButn := widget.NewButton("Dictionaries", func() {})
+	listing := CreateNewList(names, noteBindings)
+	oneAdd := CreateNewLineButton("NewLine", noteBindings, listing)
 
-	listing = widget.NewListWithData(
-		noteBindings,
-		func() fyne.CanvasObject {
-			noteEntry := widget.NewEntry()
-			delButn := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
-				position := slices.Index(notes, noteEntry.Text)
-				nwList := removeElementByIndex(notes, position)
-				noteBindings.Set(nwList)
-			})
-
-			delButn.Resize(fyne.NewSize(10, 10))
-			moveButn := widget.NewButtonWithIcon("", icon2.Resource, func() {
-
-			})
-
-			boxBox = container.NewBorder(nil, nil, moveButn, delButn, noteEntry)
-			return boxBox
-		},
-		func(di binding.DataItem, co fyne.CanvasObject) {
-			co.(*fyne.Container).Objects[0].(*widget.Entry).Bind(di.(binding.String))
-		},
-	)
 	butnLine := container.NewBorder(nil, nil, oneAdd, DictionButn)
 	fLine := container.NewVBox(title, saveButn)
 	topQuater := container.NewVBox(fLine, butnLine)
 	rightHand2 := container.NewBorder(topQuater, nil, nil, nil, listing)
 	rightScroll := container.NewScroll(rightHand2)
+
+	//widget.NewEntryWithData()
 
 	DictionButn2 := widget.NewButtonWithIcon("Back to note", theme.LogoutIcon(), func() {
 		rightHand2.RemoveAll()
@@ -123,7 +94,7 @@ func loadRightSide(names []string, ID int, w fyne.Window) fyne.CanvasObject {
 }
 
 func leftSide(cont *fyne.Container, w fyne.Window) fyne.CanvasObject {
-	names := getNoteList()
+	names := getNoteNames()
 	nameBinding := binding.BindStringList(&names)
 	leftHand := new(fyne.Container)
 	addButn := widget.NewToolbar(
@@ -137,13 +108,14 @@ func leftSide(cont *fyne.Container, w fyne.Window) fyne.CanvasObject {
 		func() fyne.CanvasObject {
 			label := widget.NewLabel("")
 			noteDel := widget.NewButtonWithIcon("", theme.DeleteIcon(), func() {
+
 				position := slices.Index(names, label.Text)
 				nwNote := removeElementByIndex(names, position)
 				nameBinding.Set(nwNote)
 				nameBinding.Reload()
 				err := delItem(label.Text)
 				if err != nil {
-					dialog.ShowError(errors.New("oops! seems like the book doesn't exist"), w)
+					return
 				}
 				leftHand.Refresh()
 				//createLockIcon()
@@ -152,7 +124,6 @@ func leftSide(cont *fyne.Container, w fyne.Window) fyne.CanvasObject {
 			})
 			//noteDel.Resize(fyne.NewSize(10, 10))
 			//	padlock := widget.NewButtonWithIcon("", createLockIcon().Resource, func() {})
-
 			return container.NewBorder(nil, nil, label, noteDel)
 		},
 		// binds the template item above to a string binding
@@ -162,7 +133,7 @@ func leftSide(cont *fyne.Container, w fyne.Window) fyne.CanvasObject {
 	)
 	nameList.OnSelected = func(id widget.ListItemID) {
 		cont.RemoveAll()
-		cont.Add(loadRightSide(names, id, w))
+		cont.Add(loadRightSide(names, id, w, leftHand))
 	}
 	nameList.OnUnselected = func(id widget.ListItemID) {
 		cont.RemoveAll()
