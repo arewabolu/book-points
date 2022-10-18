@@ -20,6 +20,11 @@ func getBase() (string, error) {
 	return basedir, err
 }
 
+func dictionaryPath() string {
+	base, _ := getBase()
+	return base + "/dictionaries/"
+}
+
 // Used to create Notes directory at the start of the App
 // If directory already exists, It does nothing and returns nil.
 func makeDir() error {
@@ -29,6 +34,14 @@ func makeDir() error {
 		return homeDirErr
 	}
 	err := os.MkdirAll(home+"/booktakes/", os.ModePerm)
+	if err != nil {
+		return err
+	}
+	base, _ := getBase()
+	err = os.MkdirAll(base+"/dictionaries/", os.ModePerm)
+	if err != nil {
+		return err
+	}
 	return err
 }
 
@@ -63,7 +76,21 @@ func write2Book(title string, noteList []string) {
 	}
 }
 
-func getNoteList() []string {
+func writeBookDictionary(title string, noteList []string) {
+	//when best to use append vs write only
+	titleTxt := dictionaryPath() + title + "dictionary" + ".txt"
+	openBook, err := os.OpenFile(titleTxt, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer openBook.Close()
+	for _, noteLines := range noteList {
+		openBook.WriteString(noteLines + "\n")
+	}
+}
+
+// Crawls through the base directory and returns a list of file names
+func getNoteNames() []string {
 	baseDir, _ := getBase()
 	names := dirIterator(baseDir)
 	return names
@@ -103,6 +130,29 @@ func titleWriter(oldTitle, nwTitle string) (string, error) {
 // every new line as an item in a slice
 // what if you just used os.ReadFile and convert its return value to string
 func read4rmBook(filepath string) ([]string, error) {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	scanner := bufio.NewScanner(file)
+	lineText := make([]string, 0)
+
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+
+	for scanner.Scan() {
+		if scanner.Text() == "" {
+			continue
+		}
+		lineText = append(lineText, scanner.Text())
+	}
+
+	return lineText, nil
+}
+
+func readBookDictionary(filepath string) ([]string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, err
