@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -47,24 +48,35 @@ func titleEntry(text string) (*widget.Entry, binding.String) {
 	return titleEntry, titleBind
 }
 
-func loadRightSide(names []string, ID int, w fyne.Window, lH *fyne.Container) fyne.CanvasObject {
-	baseDir, _ := getBase()
-	title, titleBind := titleEntry(names[ID])
-	notes, _ := read4rmBook(baseDir + names[ID] + ".txt")
-	noteBindings := binding.BindStringList(&notes)
+func loadRightSide(b *bookinfo, w fyne.Window, lH *fyne.Container) fyne.CanvasObject {
+	listEnt := new(widget.Entry)
 
-	saveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
-		saveFunc(names[ID], titleBind, noteBindings, w)
+	title, titleBind := titleEntry(b.name)
+
+	noteBindings := binding.BindStringList(&b.notes)
+	oneAdd := widget.NewButton("NewLine", func() {
+		listEnt = newLnEntry()
+		//	noteBindings.Append("")
+
 	})
-	saveButn.Resize(fyne.NewSize(30, 30))
-
 	DictionButn := widget.NewButton("Dictionaries", func() {})
-	listing := CreateNewList(names, noteBindings)
-	oneAdd := CreateNewLineButton("NewLine", noteBindings, listing)
+	sublineButn := widget.NewButton("Subline", func() {
+		subCont := container.NewVBox(sublineEntry())
+		subCont.Move(fyne.NewPos(100, 30))
+		noteBindings.Append("")
+	})
+	saveButn := widget.NewButtonWithIcon("Save", theme.DocumentSaveIcon(), func() {
+		saveFunc(b.name, titleBind, noteBindings, w)
+	})
+	//saveButn.Resize(fyne.NewSize(30, 30))
 
-	butnLine := container.NewBorder(nil, nil, oneAdd, DictionButn)
+	//
+
+	butnLine := container.NewBorder(nil, nil, oneAdd, sublineButn, DictionButn)
 	fLine := container.NewVBox(title, saveButn)
 	topQuater := container.NewVBox(fLine, butnLine)
+
+	listing := createNewList(b.notes, listEnt, noteBindings)
 	rightHand2 := container.NewBorder(topQuater, nil, nil, nil, listing)
 	rightScroll := container.NewScroll(rightHand2)
 
@@ -80,7 +92,7 @@ func loadRightSide(names []string, ID int, w fyne.Window, lH *fyne.Container) fy
 	})
 
 	DictionButn.OnTapped = func() {
-		saveFunc(names[ID], titleBind, noteBindings, w)
+		saveFunc(b.name, titleBind, noteBindings, w)
 		rightHand2.RemoveAll()
 		butnLine.RemoveAll()
 		butnLine.Add(DictionButn2)
@@ -133,20 +145,29 @@ func leftSide(cont *fyne.Container, w fyne.Window) fyne.CanvasObject {
 	)
 	nameList.OnSelected = func(id widget.ListItemID) {
 		cont.RemoveAll()
-		cont.Add(loadRightSide(names, id, w, leftHand))
+		baseDir, _ := getBase()
+		notes, _ := read4rmBook(baseDir + names[id] + ".txt")
+		b := &bookinfo{
+			name:  names[id],
+			notes: notes,
+		}
+		cont.Add(NewRightSide(b, w))
 	}
 	nameList.OnUnselected = func(id widget.ListItemID) {
 		cont.RemoveAll()
 	}
-	//go func() {
-	//	for {
-	//		time.NewTicker(2 * time.Second)
-	//		//time.NewTicker(5 * time.Second)
-	//		nameList.Refresh()
-	//	}
-	//}()
+
 	leftHand = container.NewBorder(addButn, nil, nil, nil, nameList)
 	lScroll := container.NewScroll(leftHand)
+	go func() {
+		for range time.Tick(time.Second) {
+			names := getNoteNames()
+			nameBinding := binding.BindStringList(&names)
+			nameBinding.Reload()
+			nameList.Refresh()
+			lScroll.Refresh()
+		}
+	}()
 	return lScroll
 }
 

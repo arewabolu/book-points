@@ -65,7 +65,7 @@ func write2Book(title string, noteList []string) {
 	flPath, _ := getBase()
 	//when best to use append vs write only
 	titleTxt := flPath + title + ".txt"
-	openBook, err := os.OpenFile(titleTxt, os.O_APPEND|os.O_WRONLY, 0644)
+	openBook, err := os.OpenFile(titleTxt, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -128,7 +128,6 @@ func titleWriter(oldTitle, nwTitle string) (string, error) {
 
 // Reads notes from files and returns
 // every new line as an item in a slice
-// what if you just used os.ReadFile and convert its return value to string
 func read4rmBook(filepath string) ([]string, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
