@@ -35,19 +35,6 @@ func header() fyne.CanvasObject {
 	return header
 }
 
-func titleEntry(text string) (*widget.Entry, binding.String) {
-	titleEntry := widget.NewEntry()
-	titleBind := binding.NewString()
-	titleEntry.SetText(text)
-	titleEntry.Resize(fyne.NewSize(250, 30))
-	titleEntry.OnChanged = func(s string) {
-		titleBind.Set(s)
-		titleEntry.Bind(titleBind)
-		text = s
-	}
-	return titleEntry, titleBind
-}
-
 func loadRightSide(b *bookinfo, w fyne.Window, lH *fyne.Container) fyne.CanvasObject {
 	listEnt := new(widget.Entry)
 
@@ -55,7 +42,7 @@ func loadRightSide(b *bookinfo, w fyne.Window, lH *fyne.Container) fyne.CanvasOb
 
 	noteBindings := binding.BindStringList(&b.notes)
 	oneAdd := widget.NewButton("NewLine", func() {
-		listEnt = newLnEntry()
+		//listEnt = newLnEntry()
 		//	noteBindings.Append("")
 
 	})

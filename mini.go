@@ -11,16 +11,42 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+func titleEntry(text string) (*widget.Entry, binding.String) {
+	titleEntry := widget.NewEntry()
+	titleBind := binding.NewString()
+	titleEntry.SetText(text)
+	titleEntry.Resize(fyne.NewSize(250, 30))
+	titleEntry.OnChanged = func(s string) {
+		titleBind.Set(s)
+		titleEntry.Bind(titleBind)
+		text = s
+	}
+	return titleEntry, titleBind
+}
+
 func sublineEntry() *widget.Entry {
 	subButn := widget.NewEntry()
 	subButn.Move(fyne.NewPos(100, 30))
 	return subButn
 }
-func newLnEntry() *widget.Entry { return widget.NewEntry() }
 
+/*
+	func newLnEntry() *widget.Entry {
+		titleEntry := widget.NewEntry()
+		titleBind := binding.NewString()
+		titleEntry.SetText(text)
+		titleEntry.OnChanged = func(s string) {
+
+			titleBind.Set(s)
+			titleEntry.Bind(titleBind)
+			text = s
+		}
+		return widget.NewEntry()
+	}
+*/
 func oneAdd() *widget.Button {
-	b := widget.NewButton("NewLine", func() {})
-	return b
+	butn := widget.NewButton("NewLine", func() {})
+	return butn
 }
 
 func createNewList(notes []string, listEnt *widget.Entry, bind binding.ExternalStringList) *widget.List {
